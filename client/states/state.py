@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
-from manager import Manager
+import sys
+
+sys.path.append("../..")
 
 class State(ABC):
     def __init__(self, manager):
+        from manager import Manager
         self.manager:Manager = manager
         
     @abstractmethod

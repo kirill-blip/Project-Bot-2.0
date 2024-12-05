@@ -1,19 +1,28 @@
+import datetime
 from entry import Entry
 from response import Response
-from states.last_name import LastNameState
+from .entry_state import EntryState
 from .state import State
 from service_collection import ServiceCollection
 
-class FirstName(State):
+class PhoneState(State):
     def get_message(self):
-        return "Введите ваше имя:"
+        return "Введите ваш номер телефона:"
     
     def handle_message(self, message):
         entry:Entry = ServiceCollection.FormRepository.get_form_entry(self.manager.chat_id)
-        entry.first_name = message.text
+        
+        entry.chat_id = self.manager.chat_id
+        entry.date = datetime.datetime.now().strftime("%Y-%m-%d")
+        entry.ticket_number = ServiceCollection.Repository.get_last_number(entry.date) + 1
+        
+        entry.phone = message.text
+        
         ServiceCollection.FormRepository.save_form_entry(self.manager.chat_id, entry)
         
-        next_state = LastNameState(self.manager)
+        ServiceCollection.Repository.save_entry(entry)
+        
+        next_state = EntryState(self.manager)
         self.manager.set_next_state(next_state)
         
         return Response(next_state.get_message(), next_state.get_markup())

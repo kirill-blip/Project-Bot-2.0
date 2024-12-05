@@ -10,7 +10,7 @@ class InitialState(State):
     
     def handle_message(self, message):
         if message.data == 'entry':
-            next_state = FirstName()
+            next_state = FirstName(self.manager)
             self.manager.set_next_state(next_state)
             
             return Response(next_state.get_message(), next_state.get_markup())
