@@ -11,6 +11,10 @@ class FormRepository(ABC):
     @abstractmethod
     def save_form_entry(self, chat_id: int, form_data: Entry):
         pass
+    
+    @abstractmethod
+    def dispose(self):
+        pass
 
 
 class InMemoryFormRepository(FormRepository):
@@ -24,3 +28,6 @@ class InMemoryFormRepository(FormRepository):
 
     def save_form_entry(self, chat_id: int, form_data: Entry):
         self.entries[chat_id] = form_data
+        
+    def dispose(self):
+        self.entries.clear()

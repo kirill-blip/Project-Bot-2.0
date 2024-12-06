@@ -1,9 +1,14 @@
+from admin import Admin
 from manager import Manager
+from service_collection import ServiceCollection
 import telebot
 
-from service_collection import ServiceCollection
+import sys
+sys.path.append('C:/Users/golub/Develop/College/Python/Project Bot 2.0')
 
-class Bot():
+from observer import Observer
+
+class Bot(Observer):
     def __init__(self, token:str):
         self.bot = telebot.TeleBot(token)
         
@@ -11,11 +16,26 @@ class Bot():
         self.bot.message_handler(content_types=['text'])(self.handle_text_command)
         
         self.bot.callback_query_handler(func=self.callback_query_filter)(self.handle_button_query)
+
+    def update(self, entry_id):
+        status:str= ServiceCollection.Repository.get_status_by_entry_id(entry_id)
+        chat_id = ServiceCollection.Repository.get_chat_id_by_entry_id(entry_id)
         
+        admin:Admin = ServiceCollection.Repository.get_admin(entry_id)
+        
+        print("Status: ", status)
+        if status == "AtTheReception":
+            text = f"Подойдите к столику №{admin.table_number}.\nВас будет обслуживать: {admin.first_name} {admin.last_name}."
+            self.bot.send_message(chat_id, text)
+            
+    
+    def run(self):
         self.bot.polling(none_stop=True)
         
     def callback_query_filter(self, call):
-        return (call.data.startswith("entry"))
+        return (call.data.startswith("entry")
+                or call.data == "use"
+                or call.data == "change")
     
     def handle_button_query(self, call):
         manager = Manager(call.message.chat.id)
@@ -34,15 +54,23 @@ class Bot():
         manager = Manager(message.chat.id)
         next_state = None
         
-        if ServiceCollection.Repository.has_entry_by_chat_id(message.chat.id):
-            from states.entry_state import EntryState
-            next_state = EntryState(manager)
-        else:
-            from states.start_state import StartState
-            next_state = StartState(manager)
-            
+        # if ServiceCollection.Repository.has_entry_by_chat_id(message.chat.id):
+        #     if ServiceCollection.Repository.is_user_waiting(message.chat.id):
+        #         from states.entry_state import EntryState
+        #         next_state = EntryState(manager)
+        #     else:
+        #         from states.ask_state import AskState
+        #         next_state = AskState(manager)
+        # else:
+        from states.start_state import StartState
+
+        next_state = StartState(manager)
+        
         manager.set_next_state(next_state)
             
         response = manager.handle_message(message)
         
         self.bot.send_message(chat_id=message.chat.id, text=response.message, reply_markup=response.markup)
+        
+    def send_message(self, chat_id, message):
+        self.bot.send_message(chat_id, message)
