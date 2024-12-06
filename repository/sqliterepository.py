@@ -134,3 +134,6 @@ class SQLiteRepository(Repository):
         result = self.cursor.fetchone()
 
         return result[0] > 0
+    
+    def dispose(self):
+        pass
