@@ -50,5 +50,10 @@ class Repository(ABC):
         pass
     
     @abstractmethod
+    def update_status(self, chat_id):
+        pass
+    
+    @abstractmethod
     def dispose(self):
         pass
+    
