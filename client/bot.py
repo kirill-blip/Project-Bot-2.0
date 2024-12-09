@@ -23,11 +23,13 @@ class Bot(Observer):
         
         admin:Admin = ServiceCollection.Repository.get_admin(entry_id)
         
-        print("Status: ", status)
         if status == "AtTheReception":
             text = f"Подойдите к столику №{admin.table_number}.\nВас будет обслуживать: {admin.first_name} {admin.last_name}."
             self.bot.send_message(chat_id, text)
-            
+        
+        if status == "Cancel":
+            text = f"Вашу запись отменили."
+            self.bot.send_message(chat_id, text)
     
     def run(self):
         self.bot.polling(none_stop=True)
@@ -35,7 +37,8 @@ class Bot(Observer):
     def callback_query_filter(self, call):
         return (call.data.startswith("entry")
                 or call.data == "use"
-                or call.data == "change")
+                or call.data == "change"
+                or call.data == "cancel")
     
     def handle_button_query(self, call):
         manager = Manager(call.message.chat.id)
@@ -54,17 +57,18 @@ class Bot(Observer):
         manager = Manager(message.chat.id)
         next_state = None
         
-        # if ServiceCollection.Repository.has_entry_by_chat_id(message.chat.id):
-        #     if ServiceCollection.Repository.is_user_waiting(message.chat.id):
-        #         from states.entry_state import EntryState
-        #         next_state = EntryState(manager)
-        #     else:
-        #         from states.ask_state import AskState
-        #         next_state = AskState(manager)
-        # else:
-        from states.start_state import StartState
-
-        next_state = StartState(manager)
+        has_entry = ServiceCollection.Repository.has_entry_by_chat_id(message.chat.id)
+        is_waiting = ServiceCollection.Repository.is_user_waiting(message.chat.id)
+        
+        print("Has entry", has_entry)
+        print("Is waiting", is_waiting)
+        
+        if has_entry and is_waiting:
+            from states.initial_entry_state import InitialEntryState
+            next_state = InitialEntryState(manager)
+        else:
+            from states.start_state import StartState
+            next_state = StartState(manager)
         
         manager.set_next_state(next_state)
             

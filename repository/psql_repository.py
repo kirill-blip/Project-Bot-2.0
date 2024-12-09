@@ -184,6 +184,16 @@ class PsqlRepository(Repository, Subject):
         
         return self.get_cursor().fetchone()[0]
     
+    def update_status(self, chat_id, new_status):
+        self.get_cursor().execute(f'''
+                                  UPDATE entry
+                                  SET status = '{new_status}'
+                                  WHERE user_id = (SELECT id FROM "user" WHERE chat_id = {chat_id}
+                                        AND status = 'Waiting')
+                                  ''')
+
+        self.connection.commit()
+    
     def dispose(self):
         self.get_cursor().close()
         
