@@ -199,6 +199,133 @@ class PsqlRepository(Repository, Subject):
         
         self.connection.commit()
         self.connection.close()
+    
+
+    def has_entry_by_chat_id(self, chat_id):
+        self.cursor.execute(
+            """
+            SELECT * 
+            FROM entry 
+            WHERE user_id = (SELECT id FROM user WHERE chat_id = ?) AND
+                  status = 'Waiting'
+        """,
+            (chat_id,),
+        )
+
+        result = self.cursor.fetchone()
+
+        return result[0] > 0
+    
+
+    def check_password(self, password : str):
+        self.cursor.execute(f'''
+            SELECT EXISTS (
+                SELECT 1
+                FROM admin
+                WHERE password = '{password}'
+            );
+        ''')
+        exists = self.cursor.fetchone()[0]
+        return exists
+    
+    def get_name_and_num(self, password: str):
+        self.cursor.execute(f'''
+            select
+                last_name || ' ' || first_name as "full name",
+                table_number
+            from admin
+            where password = '{password}';
+        ''')
+        result = self.cursor.fetchall()[:]
+        return result
+    
+    def update_status_admin(self, table_number: int):
+        self.cursor.execute(f'''
+            UPDATE admin
+            SET status = TRUE
+            WHERE table_number = {table_number};
+        ''')
+
+    def check_admin_status(self, password: str):
+        self.cursor.execute(f'''
+            SELECT status FROM admin
+            WHERE password = '{password}';
+        ''')
+        result = self.cursor.fetchall()[0][0]
+        if result:  
+            return False
+        return True
+    
+    def check_user_admin(self, id : int):
+        self.cursor.execute(f'''
+            SELECT 
+                1 
+            FROM
+                user_admin
+            WHERE user_id = {id};
+        ''')
+        exists = self.cursor.fetchone()
+        return exists is not None
+    
+    def add_user_admin(self, id : int):
+        self.cursor.execute(f'''
+            insert into user_admin(user_id) values
+            ({id});
+        ''')
+
+        self.connection.commit
+
+    def call_client(self):
+        self.cursor.execute('''
+            SELECT 
+                id,
+                last_name || ' ' || first_name AS full_name
+            FROM
+                entry
+            WHERE
+                status = 'waiting'
+            ORDER BY id
+            LIMIT 1;
+        ''')
+        client = self.cursor.fetchone()
+        return client
+    
+    def update_client(self, id: int):
+        self.cursor.execute(f'''
+            update entry
+            set status = 'AtTheReception'
+            where id = {id}
+        ''')
+        self.connection.commit
+
+    def check_client(self):
+        self.cursor.execute('''
+            SELECT 
+                count(status)
+            FROM entry
+            WHERE status = 'waiting'
+        ''')
+
+        result = self.cursor.fetchone()  
+        if result:
+            return result[0]
+        return 0  
+    
+    def dont_come_client(self, id):
+        self.cursor.execute(f'''
+            update entry
+            set status = 'Fail'
+            where id = {id}
+        ''')
+        self.connection.commit
+
+    def come_client(self, id):
+        self.cursor.execute(f'''
+            update entry
+            set status = 'Accept'
+            where id = {id}
+        ''')
+        self.connection.commit
         
         
 def listen(repository: PsqlRepository):
@@ -223,3 +350,4 @@ def listen(repository: PsqlRepository):
                     notify = connection.notifies.pop(0)
                     print("Got NOTIFY:", notify.pid, notify.channel, notify.payload)
                     repository.notify(notify.payload)
+
