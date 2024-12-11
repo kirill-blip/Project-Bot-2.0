@@ -24,4 +24,7 @@ class Manager():
             self.states[self.chat_id] = StartState(self)
             
     def is_form(self):
-        return isinstance(self.states[self.chat_id], (FirstName, LastNameState, PhoneState, EntryState))
+        return isinstance(self.states[self.chat_id], (FirstName, LastNameState, PhoneState))
+    
+    def is_entry_state(self):
+        return isinstance(self.states[self.chat_id], EntryState)

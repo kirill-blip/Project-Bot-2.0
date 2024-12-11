@@ -1,16 +1,20 @@
 from admin import Admin
 from manager import Manager
+from response import Response
 from service_collection import ServiceCollection
 import telebot
 
 import sys
 import os
+
+from states.help_state import HelpState
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from observer import Observer
 
 class Bot(Observer):
     def __init__(self, token:str):
+        ServiceCollection.LoggerService.info("Bot creating")
         self.bot = telebot.TeleBot(token)
         
         self.last_bot_message = {}
@@ -21,7 +25,7 @@ class Bot(Observer):
         self.bot.message_handler(content_types=['text'])(self.handle_text_command)
         
         self.bot.callback_query_handler(func=self.callback_query_filter)(self.handle_button_query)
-
+        
     def update(self, entry_id):
         status:str= ServiceCollection.Repository.get_status_by_entry_id(entry_id)
         chat_id = ServiceCollection.Repository.get_chat_id_by_entry_id(entry_id)
@@ -40,6 +44,7 @@ class Bot(Observer):
             self.bot.send_message(chat_id, text)    
     
     def run(self):
+        ServiceCollection.LoggerService.info("Bot running")
         self.bot.polling(none_stop=True)
         
     def callback_query_filter(self, call):
@@ -49,24 +54,37 @@ class Bot(Observer):
                 or call.data == "cancel")
         
     def handle_button_query(self, call):
+        print("Handling button query")
         manager = Manager(call.message.chat.id)
         response = manager.handle_message(call)
         
         self.bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        self.bot.send_message(call.message.chat.id, response.message, reply_markup=response.markup)
+        self.send_message(call.message.chat.id, response.message, response.markup)
     
     def handle_text_command(self, message):
         manager = Manager(message.chat.id)
         
-        if manager.is_form():
+        if manager.is_entry_state():
+            self.bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        elif manager.is_form():
             response = manager.handle_message(message)
-            self.bot.send_message(chat_id=message.chat.id, text=response.message, reply_markup=response.markup)
-            return
+            self.bot.send_message(message.chat.id, response.message, reply_markup=response.markup)
         else:
             self.bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
     
     def handle_help_command(self, message):
-        self.bot.send_message(chat_id=message.chat.id, text="Помощь. В разработке.")
+        manager = Manager(message.chat.id)
+        
+        if manager.is_form():
+            self.bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+            return
+        
+        next_state = HelpState(manager)
+        manager.set_next_state(next_state)
+        
+        response:Response = manager.handle_message(message)
+        
+        self.send_message(message.chat.id, response.message, response.markup)
     
     def handle_entry_command(self, message):
         manager = Manager(message.chat.id)
@@ -82,7 +100,7 @@ class Bot(Observer):
         manager.set_next_state(next_state)
         response = manager.handle_message(message)
         
-        self.bot.send_message(chat_id=message.chat.id, text=response.message, reply_markup=response.markup)
+        self.send_message(message.chat.id, response.message, response.markup)
     
     def handle_start_command(self, message):
         if ServiceCollection.Repository.get_user(message.chat.id):
@@ -103,7 +121,14 @@ class Bot(Observer):
         
         manager.set_next_state(next_state)
         response = manager.handle_message(message)
-        self.bot.send_message(chat_id=message.chat.id, text=response.message, reply_markup=response.markup)
+        self.send_message(message.chat.id, response.message, response.markup)
         
-    def send_message(self, chat_id, message):
-        self.bot.send_message(chat_id, message)
+    def send_message(self, chat_id, message, reply_markup=None):
+        if chat_id in self.last_bot_message:
+            try:
+                self.bot.delete_message(chat_id, self.last_bot_message[chat_id])
+            except telebot.apihelper.ApiException as e:
+                print(f"Failed to delete message: {e}")
+        
+        message = self.bot.send_message(chat_id, text=message, reply_markup=reply_markup)
+        self.last_bot_message[chat_id] = message.message_id
