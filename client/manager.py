@@ -1,3 +1,7 @@
+from states.entry_state import EntryState
+from states.first_name import FirstName
+from states.last_name import LastNameState
+from states.phone_state import PhoneState
 from states.start_state import StartState
 import response
 
@@ -18,3 +22,6 @@ class Manager():
     def ensure_chat_id_has_state(self):
         if self.states.get(self.chat_id) is None:
             self.states[self.chat_id] = StartState(self)
+            
+    def is_form(self):
+        return isinstance(self.states[self.chat_id], (FirstName, LastNameState, PhoneState, EntryState))

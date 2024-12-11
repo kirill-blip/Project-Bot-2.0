@@ -65,11 +65,11 @@ class Repository(ABC):
         pass
 
     @abstractmethod
-    def get_name_and_num(self, password : str):
+    def get_name_and_table_number(self, password : str):
         pass
 
     @abstractmethod
-    def update_status_admin(self, table_number : int):
+    def update_status_admin(self, chat_id, table_number : int):
         pass
 
     @abstractmethod
@@ -89,7 +89,7 @@ class Repository(ABC):
         pass
 
     @abstractmethod
-    def update_client(self, id : int):
+    def update_client(self, admin_id : int,ticket_id : int):
         pass
 
     @abstractmethod
@@ -102,4 +102,12 @@ class Repository(ABC):
 
     @abstractmethod
     def dont_come_client(self):
+        pass
+    
+    @abstractmethod
+    def update_status_by_ticket_number(self, ticket_number : int, new_status:str):
+        pass
+    
+    @abstractmethod
+    def get_table_number(self, chat_id : int):
         pass

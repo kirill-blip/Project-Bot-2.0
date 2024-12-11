@@ -4,7 +4,8 @@ from service_collection import ServiceCollection
 import telebot
 
 import sys
-sys.path.append('C:/Users/golub/Develop/College/Python/Project Bot 2.0')
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from observer import Observer
 
@@ -20,16 +21,19 @@ class Bot(Observer):
     def update(self, entry_id):
         status:str= ServiceCollection.Repository.get_status_by_entry_id(entry_id)
         chat_id = ServiceCollection.Repository.get_chat_id_by_entry_id(entry_id)
-        
-        admin:Admin = ServiceCollection.Repository.get_admin(entry_id)
-        
+
         if status == "AtTheReception":
+            admin:Admin = ServiceCollection.Repository.get_admin(entry_id)
             text = f"Подойдите к столику №{admin.table_number}.\nВас будет обслуживать: {admin.first_name} {admin.last_name}."
-            self.bot.send_message(chat_id, text)
+            self.bot.send_message(chat_id, text)    
         
         if status == "Cancel":
-            text = f"Вашу запись отменили."
-            self.bot.send_message(chat_id, text)
+            text = "Вашу запись отменили."
+            self.bot.send_message(chat_id, text)    
+        
+        if status == "Accept":
+            text = "Ваш прием окончен."
+            self.bot.send_message(chat_id, text)    
     
     def run(self):
         self.bot.polling(none_stop=True)
@@ -49,9 +53,13 @@ class Bot(Observer):
     
     def handle_text_command(self, message):
         manager = Manager(message.chat.id)
-        response = manager.handle_message(message)
         
-        self.bot.send_message(chat_id=message.chat.id, text=response.message, reply_markup=response.markup)    
+        if manager.is_form():
+            response = manager.handle_message(message)
+            self.bot.send_message(chat_id=message.chat.id, text=response.message, reply_markup=response.markup)
+            return
+        else:
+            self.bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
     
     def handle_start_command(self, message):
         manager = Manager(message.chat.id)
@@ -59,9 +67,6 @@ class Bot(Observer):
         
         has_entry = ServiceCollection.Repository.has_entry_by_chat_id(message.chat.id)
         is_waiting = ServiceCollection.Repository.is_user_waiting(message.chat.id)
-        
-        print("Has entry", has_entry)
-        print("Is waiting", is_waiting)
         
         if has_entry and is_waiting:
             from states.initial_entry_state import InitialEntryState

@@ -1,5 +1,5 @@
 {
-        "dbname": "test",
+        "dbname": "bot_staging",
         "user": "postgres",
         "password": "postgres",
         "host": "localhost",
