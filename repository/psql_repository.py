@@ -56,6 +56,27 @@ class PsqlRepository(Repository, Subject):
         result = self.get_cursor().fetchone()
 
         return result[0]
+    
+    def get_admin_by_chat_id(self, id:int):
+        self.get_cursor().execute(
+            f"""
+            SELECT 
+                first_name,
+                last_name,
+                table_number
+            FROM admin
+            WHERE chat_id = {id};
+        """
+        )
+        result = self.get_cursor().fetchone()
+        
+        admin: Admin = Admin()
+
+        admin.first_name = result[0]
+        admin.last_name = result[1]
+        admin.table_number = result[2]
+
+        return admin
 
     def get_admin(self, entry: str):
         self.get_cursor().execute(

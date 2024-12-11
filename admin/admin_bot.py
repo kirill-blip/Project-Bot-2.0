@@ -23,7 +23,7 @@ class AdminBot:
         self.bot.message_handler(commands=["start"])(self.handle_start_command)
         self.bot.message_handler(func=self.handle_password_input)(self.process_message)
         self.bot.message_handler(func=self.handle_button_press)(
-            self.handle_button_action
+            self.call_client
         )
 
         self.bot.message_handler(func=lambda message: self.waiting_for_button)(
@@ -121,20 +121,21 @@ class AdminBot:
 
     def handle_button_press(self, message):
         if message.text == "Вызвать клиента":
-            self.handle_button_action(message)
+            self.call_client(message)
 
-    def handle_button_action(self, message):
+    def call_client(self, message):
         if self.no_admin in [0, 1]:
             return
         
         exists = ServiceCollection.Repository.check_client()
         
-        # if self.admin_manager.is_busy(message.chat.id):
-        #     self.bot.send_message(message.chat.id, "Вы уже заняты")
-        #     return
+        if self.admin_manager.is_busy(message.chat.id):
+            self.bot.delete_message(message.chat.id, message.message_id)
+            self.warn_user_to_press_button(message)
+            return
         
         if exists != 0:
-            AdminManager().set_is_busy_admin(message.chat.id, True)
+            self.admin_manager.set_is_busy_admin(message.chat.id, True)
             
             client = ServiceCollection.Repository.call_client()
             table_number = ServiceCollection.Repository.get_table_number(message.chat.id)
@@ -152,7 +153,8 @@ class AdminBot:
             self.bot.send_message(message.chat.id, "Больше нет клиентов")
 
     def process_message(self, message):
-        table_info = ", ".join(str(i) for i in self.information)
+        table_info = ServiceCollection.Repository.get_table_number(message.chat.id)
+        
         self.bot.send_message(
             message.chat.id, f"Вы можете приступить к работе! Ваш стол № {table_info}"
         )
@@ -167,11 +169,11 @@ class AdminBot:
         return markup
 
     def handle_no_action(self, admin_chat_id:int, id):
-        # self.admin_manager.set_is_busy_admin(admin_chat_id, False)
+        self.admin_manager.set_is_busy_admin(admin_chat_id, False)
         ServiceCollection.Repository.dont_come_client(id)
 
     def handle_yes_action(self, admin_chat_id:int, id):
-        # self.admin_manager.set_is_busy_admin(admin_chat_id, False)
+        self.admin_manager.set_is_busy_admin(admin_chat_id, False)
         ServiceCollection.Repository.come_client(id)
 
     def warn_user_to_press_button(self, message):

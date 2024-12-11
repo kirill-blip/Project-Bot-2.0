@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__f
 
 from psql_repository import PsqlRepository
 
-app_type = "production"
+app_type = "development"
 
 psql_settings = {}    
 
@@ -31,7 +31,8 @@ print(psql_settings)
 
 ServiceCollection.Repository = PsqlRepository(psql_settings["dbname"], psql_settings["user"], psql_settings["password"], psql_settings["host"], psql_settings["port"])
 
+bot = AdminBot("8177585416:AAGoas6yHV8dGmH5bTxFHu3Tpcnxqe9GwPw")
 try:
-    bot = AdminBot("8177585416:AAGoas6yHV8dGmH5bTxFHu3Tpcnxqe9GwPw")
+    pass
 except Exception as e:
     print(e)

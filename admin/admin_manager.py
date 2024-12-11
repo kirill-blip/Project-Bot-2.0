@@ -5,4 +5,7 @@ class AdminManager():
         self.admins[chat_id] = is_busy
     
     def is_busy(self, chat_id:int):
-        return chat_id in self.admins
+        if chat_id not in self.admins:
+            return False
+        
+        return self.admins[chat_id]

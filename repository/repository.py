@@ -87,6 +87,14 @@ class Repository(ABC):
     @abstractmethod
     def call_client(self):
         pass
+    
+    @abstractmethod
+    def get_admin(self, entry:str):
+        pass
+    
+    @abstractmethod
+    def get_admin_by_chat_id(self, admin_id:int):
+        pass
 
     @abstractmethod
     def update_client(self, admin_id : int,ticket_id : int):
