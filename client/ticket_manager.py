@@ -8,13 +8,10 @@ class TicketManager():
         entry:Entry = ServiceCollection.FormRepository.get_form_entry(chat_id)
         entry.chat_id = chat_id
         
-        last_number = ServiceCollection.Repository.get_last_number()
-        entry.date = datetime.datetime.now().strftime("%Y-%m-%d")
+        last_ticket_number = ServiceCollection.Repository.get_last_number()
+        entry.date = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
         
-        if last_number is None:
-            entry.ticket_number = 1
-        else:
-            entry.ticket_number = last_number + 1
+        entry.ticket_number = last_ticket_number + 1
             
         ServiceCollection.FormRepository.save_form_entry(chat_id, entry)
         

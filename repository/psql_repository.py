@@ -78,19 +78,17 @@ class PsqlRepository(Repository, Subject):
 
         return admin
 
-    def get_admin(self, entry: str):
+    def get_admin(self, entry: int):
         self.get_cursor().execute(
-            """
+            f"""
             SELECT first_name, last_name, table_number
             FROM "admin"
             WHERE id = (
                 SELECT admin_id 
                 FROM entry 
-                WHERE id = %s
+                WHERE entry.id = {entry}
             )
-        """,
-            (entry,),
-        )
+        """)
 
         result = self.get_cursor().fetchone()
         print(result)
@@ -139,13 +137,16 @@ class PsqlRepository(Repository, Subject):
     def get_last_number(self):
         self.get_cursor().execute(
             """
-            SELECT MAX(ticket_number) FROM entry;
+            SELECT MAX(ticket_number) 
+            FROM entry
+            WHERE "date"::DATE = CURRENT_DATE;
             """
         )
 
         result = self.get_cursor().fetchone()
+        print(result)
 
-        if result is None:
+        if result[0] is None:
             return 0
 
         return result[0]
@@ -156,7 +157,7 @@ class PsqlRepository(Repository, Subject):
             SELECT ticket_number 
             FROM entry 
             WHERE user_id = (SELECT id FROM "user" WHERE chat_id = %s)
-                AND status = 'Waiting';
+                AND status IN ('Waiting', 'AtTheReception');
             """,
             (chat_id,),
         )
@@ -191,6 +192,9 @@ class PsqlRepository(Repository, Subject):
         )
 
         result = self.get_cursor().fetchone()
+        
+        if result is None:
+            return None
 
         user = User()
         user.chat_id = result[0]
@@ -356,7 +360,8 @@ class PsqlRepository(Repository, Subject):
             """
             SELECT 
 	            ticket_number,
-	            first_name || ' ' || last_name AS full_name
+	            first_name || ' ' || last_name AS full_name,
+                phone
             FROM entry
             JOIN "user" ON user_id = "user".id
             WHERE status = 'Waiting'
@@ -423,6 +428,19 @@ class PsqlRepository(Repository, Subject):
                                   ''', (chat_id,))
         
         result = self.get_cursor().fetchone()
+        return result[0]
+    
+    def get_last_date(self):
+        self.get_cursor().execute('''
+                                SELECT MAX(date)
+                                FROM entry
+                                  ''')
+        
+        result = self.get_cursor().fetchone()
+        
+        if result is None:
+            return None
+        
         return result[0]
 
 

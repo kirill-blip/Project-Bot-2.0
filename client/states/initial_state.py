@@ -7,7 +7,7 @@ from telebot import types
 
 class InitialState(State):
     def get_message(self):
-        return 'Привет. Нажмите на кнопку "Записаться", чтобы записаться на прием.'
+        return 'Нажмите на кнопку "*Записаться*", чтобы продолжить запись на прием.'
     
     def handle_message(self, message):
         if message.data == 'entry':

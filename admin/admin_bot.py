@@ -21,6 +21,7 @@ class AdminBot:
         self.admin_manager = AdminManager()
 
         self.bot.message_handler(commands=["start"])(self.handle_start_command)
+        self.bot.message_handler(commands=["reset_attempts"])(self.handle_reset_command)
         self.bot.message_handler(func=self.handle_password_input)(self.process_message)
         self.bot.message_handler(func=self.handle_button_press)(
             self.call_client
@@ -54,16 +55,31 @@ class AdminBot:
         user_exists = ServiceCollection.Repository.check_user_admin(user_id)
 
         if user_exists:
-            self.bot.send_message(user_id, "Вас уже пробили!")
             return False
         else:
             ServiceCollection.Repository.add_user_admin(user_id)
-            self.bot.send_message(user_id, "Вас пробили")
 
         self.attempts[user_id] = 3
         self.bot.send_message(
-            message.chat.id, "Введите пароль для входа. Ваше количество попыток 3"
+            message.chat.id, "❗️ *Обратите внимание* ❗️. После *трёх* неправильных попыток *Вы не сможете больше войти.*", parse_mode="Markdown"
         )
+        self.bot.send_message(
+            message.chat.id, "Введите пароль для входа. Ваше количество попыток 3."
+        )
+        
+    def handle_reset_command(self, message):
+        user_id = message.chat.id
+        user_exists = ServiceCollection.Repository.check_user_admin(user_id)
+        
+        if user_exists:
+            self.attempts[user_id] = 3
+            self.bot.send_message(
+                message.chat.id, "Количество попыток сброшено до 3."
+            )
+        else:
+            self.bot.send_message(
+                message.chat.id, "Вы не являетесь администратором."
+            )
 
     def handle_password_input(self, message):
         user_id = message.chat.id
@@ -81,7 +97,7 @@ class AdminBot:
         
         if ServiceCollection.Repository.check_password(password):
             if ServiceCollection.Repository.check_admin_status(password) == False:
-                self.bot.send_message(user_id, "Этот стол уже занят")
+                self.bot.send_message(user_id, "Этот стол уже занят.")
             else:
                 result = ServiceCollection.Repository.get_name_and_table_number(password)
                 ServiceCollection.Repository.update_status_admin(user_id, result[0][1])
@@ -116,7 +132,7 @@ class AdminBot:
             markup.add(button)
 
             self.bot.send_message(
-                user_id, "Нажмите кнопку, чтобы вызвать человека", reply_markup=markup
+                user_id, "Нажмите кнопку, чтобы вызвать человека.", reply_markup=markup
             )
 
     def handle_button_press(self, message):
@@ -146,24 +162,24 @@ class AdminBot:
             
             self.bot.send_message(
                 message.chat.id,
-                f"Абитуриент: {client[1]}\nНомер: {client[0]}",
-                reply_markup=self.send_inline_button(),
+                f"*Талона {client[0]}*\nАбитуриент: {client[1]}\nНомер телефона: {client[2]}",
+                reply_markup=self.send_inline_button(), parse_mode="Markdown",
             )
         else:
-            self.bot.send_message(message.chat.id, "Больше нет клиентов")
+            self.bot.send_message(message.chat.id, "На сегодня записей больше нет.")
 
     def process_message(self, message):
         table_info = ServiceCollection.Repository.get_table_number(message.chat.id)
         
         self.bot.send_message(
-            message.chat.id, f"Вы можете приступить к работе! Ваш стол № {table_info}"
+            message.chat.id, f"Вы можете приступить к работе! Ваш стол № {table_info}."
         )
 
     def send_inline_button(self):
         markup = InlineKeyboardMarkup()
 
         button1 = InlineKeyboardButton(text="Не пришел", callback_data="no")
-        button2 = InlineKeyboardButton(text="Сдал", callback_data="yes")
+        button2 = InlineKeyboardButton(text="Пришел", callback_data="yes")
 
         markup.add(button1, button2)
         return markup
@@ -179,5 +195,5 @@ class AdminBot:
     def warn_user_to_press_button(self, message):
         self.bot.send_message(
             message.chat.id,
-            "Пожалуйста, нажмите одну из кнопок: 'Сдал' или 'Не пришел', прежде чем продолжить.",
+            "Пожалуйста, нажмите одну из кнопок: 'Пришел' или 'Не пришел', прежде чем продолжить.",
         )

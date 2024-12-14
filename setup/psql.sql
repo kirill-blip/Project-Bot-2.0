@@ -122,7 +122,8 @@ BEGIN
     SELECT * 
     INTO result
     FROM entry 
-    WHERE user_id = (SELECT id FROM "user" WHERE chat_id = t_chat_id );
+    WHERE user_id = (SELECT id FROM "user" WHERE chat_id = t_chat_id )
+    AND status = 'Waiting';
 
     IF result IS NULL THEN
         RETURN FALSE;

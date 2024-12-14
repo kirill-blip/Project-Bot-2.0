@@ -11,13 +11,12 @@ from service_collection import ServiceCollection
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'repository'))
 from psql_repository import PsqlRepository, listen
 
-
 logging.basicConfig(
     filename='client.log',
-    filemode='w',
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    filemode='a',
     level=logging.DEBUG
 )
+
 ServiceCollection.LoggerService = logging.getLogger()
 
 app_type = "development"
@@ -35,14 +34,13 @@ def listen_for_notifications():
     logging.info("Listening for notifications")
     listen(ServiceCollection.Repository)
 
-listener_thread = threading.Thread(target=listen_for_notifications)
-listener_thread.start()
-
 
 try:
+    listener_thread = threading.Thread(target=listen_for_notifications)
+    listener_thread.start()
     bot.run()
 except Exception as e:
-    logging.error(e)
+    ServiceCollection.LoggerService.error(e)
 
 ServiceCollection.FormRepository.dispose()
 ServiceCollection.Repository.dispose()

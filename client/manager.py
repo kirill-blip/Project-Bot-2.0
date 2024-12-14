@@ -27,4 +27,7 @@ class Manager():
         return isinstance(self.states[self.chat_id], (FirstName, LastNameState, PhoneState))
     
     def is_entry_state(self):
+        if self.states.get(self.chat_id) is None:
+            return False
+        
         return isinstance(self.states[self.chat_id], EntryState)

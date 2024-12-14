@@ -89,7 +89,7 @@ class Repository(ABC):
         pass
     
     @abstractmethod
-    def get_admin(self, entry:str):
+    def get_admin(self, entry:int):
         pass
     
     @abstractmethod
@@ -118,4 +118,8 @@ class Repository(ABC):
     
     @abstractmethod
     def get_table_number(self, chat_id : int):
+        pass
+    
+    @abstractmethod
+    def get_last_date(self, chat_id : int):
         pass
