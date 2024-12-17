@@ -333,7 +333,9 @@ class PsqlRepository(Repository, Subject):
             WHERE user_id = {id};
         """
         )
+        
         exists = self.cursor.fetchone()
+        
         return exists is not None
 
     def add_user_admin(self, id: int):
@@ -443,6 +445,66 @@ class PsqlRepository(Repository, Subject):
         
         return result[0]
 
+    def update_table_info(self, table_number:int, name:str, last_name:str, password:str):
+        if password == '':
+            self.get_cursor().execute('''
+                                SELECT password
+                                FROM admin
+                                WHERE table_number = %s
+                                  ''', (table_number))
+            
+            password = self.get_cursor().fetchone()[0]
+            
+        self.get_cursor().execute('''
+                                  DELETE FROM user_admin
+                                  WHERE user_id = (SELECT chat_id FROM admin WHERE table_number = %s)
+                                  ''', (table_number,))
+        
+        self.get_cursor().execute('''
+                                UPDATE admin
+                                SET first_name = %s,
+                                    last_name = %s,
+                                    password = %s,
+                                    chat_id = 0,
+                                    status = FALSE
+                                WHERE table_number = %s
+                                  ''', (name, last_name, password, table_number))
+        
+        self.connection.commit()
+        
+    def check_table_number(self, table_number:int):
+        self.get_cursor().execute('''
+                                SELECT EXISTS(
+                                    SELECT 1
+                                    FROM admin
+                                    WHERE table_number = %s
+                                )
+                                  ''', (table_number,))
+        
+        result = self.get_cursor().fetchone()
+        
+        return result[0]
+    
+    def add_admin(self, table_number:int, name:str, last_name:str, password:str):
+        self.get_cursor().execute('''
+                                INSERT INTO admin(table_number, first_name, last_name, password, chat_id)
+                                VALUES (%s, %s, %s, %s, 0)
+                                  ''', (table_number, name, last_name, password))
+        
+        self.connection.commit()
+        
+    def check_password_admin(self, password:str):
+        self.get_cursor().execute('''
+                                SELECT EXISTS(
+                                    SELECT 1
+                                    FROM admin
+                                    WHERE password = %s
+                                )
+                                  ''', (password,))
+        
+        result = self.get_cursor().fetchone()
+        
+        return result[0]        
 
 def listen(repository: PsqlRepository):
     connection = psycopg2.connect(

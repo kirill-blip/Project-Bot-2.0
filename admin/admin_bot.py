@@ -129,15 +129,90 @@ class AdminBot:
         if self.no_admin != 2:
             markup = ReplyKeyboardMarkup(resize_keyboard=True)
             button = KeyboardButton("Вызвать клиента")
+            update_button = KeyboardButton("Обновить информацию о столе")
+            add_admin_button = KeyboardButton("Добавить администратора")
             markup.add(button)
+            markup.add(update_button)
+            markup.add(add_admin_button)
 
             self.bot.send_message(
-                user_id, "Нажмите кнопку, чтобы вызвать человека.", reply_markup=markup
+                chat_id=user_id, text="Нажмите кнопку, чтобы вызвать человека.", reply_markup=markup
             )
 
     def handle_button_press(self, message):
+        if ServiceCollection.Repository.check_user_admin(message.chat.id) == False:
+            self.bot.send_message(message.chat.id, "Вы не являетесь больше администратором.")
+            return
+        
         if message.text == "Вызвать клиента":
             self.call_client(message)
+        elif message.text == "Обновить информацию о столе" and self.no_admin not in [0, 1]:
+            text = "Чтобы обновить информацию о столе, надо воспользоваться:\n\t`/update_table_info 'номер стола' 'имя' 'фамилия' 'пароль'`.\n\n*Пример*:\n\t`/update_table_info 1 Иван Иванов 1234`"
+            self.bot.send_message(chat_id=message.chat.id, text=text, parse_mode="Markdown")
+        elif message.text == "Добавить администратора" and self.no_admin not in [0, 1]:
+            text = "Чтобы добавить администратора, надо воспользоваться:\n\t<code>/add_admin 'номер стола' 'имя' 'фамилия' 'пароль'</code>.\n\n<b>Пример</b>:\n\t<code>/add_admin 1 Иван Иванов 1234</code>"
+            self.bot.send_message(chat_id=message.chat.id, text=text, parse_mode="HTML")
+        elif message.text.count("/update_table_info") == 1:
+            self.update_table_info(message)
+        elif message.text.count("/add_admin") == 1:
+            self.add_admin(message)
+            
+        print(message.text)
+
+    def add_admin(self, message):
+        if self.no_admin in [0, 1]:
+            return
+        
+        text = message.text.split()
+        
+        try:
+            table_number = text[1]
+            name = text[2]
+            last_name = text[3]
+            password = text[4]
+            
+            print(table_number, name, last_name, password)
+            
+            print(ServiceCollection.Repository.check_table_number(table_number))
+            
+            if ServiceCollection.Repository.check_table_number(table_number):
+                self.bot.send_message(chat_id=message.chat.id, text="Стол с таким номером уже существует.")
+                return
+            
+            if ServiceCollection.Repository.check_password_admin(password):
+                self.bot.send_message(chat_id=message.chat.id, text="Пароль уже занят.")
+                return
+            
+            ServiceCollection.Repository.add_admin(table_number, name, last_name, password)
+            
+            self.bot.send_message(chat_id=message.chat.id, text="Администратор *успешно* добавлен.", parse_mode="Markdown")
+        except:
+            self.bot.send_message(chat_id=message.chat.id, text="Введите все данные.")
+            return
+
+    def update_table_info(self, message):
+        if self.no_admin in [0, 1]:
+            return
+        
+        text = message.text.split()
+        
+        table_number = text[1]
+        name = text[2]
+        surname = text[3]
+        password = ""
+        
+        try:
+            password = text[4]
+            
+            if ServiceCollection.Repository.check_password_admin(password):
+                self.bot.send_message(chat_id=message.chat.id, text="Пароль уже занят.")
+                return
+        except:
+            pass
+        
+        ServiceCollection.Repository.update_table_info(table_number, name, surname, password)
+        
+        self.bot.send_message(chat_id=message.chat.id, text="Информация о столе *успешно* обновлена.", parse_mode="Markdown")
 
     def call_client(self, message):
         if self.no_admin in [0, 1]:

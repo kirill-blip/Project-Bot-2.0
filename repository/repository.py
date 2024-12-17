@@ -123,3 +123,19 @@ class Repository(ABC):
     @abstractmethod
     def get_last_date(self, chat_id : int):
         pass
+    
+    @abstractmethod
+    def update_table_info(self, table_number : int, name : str, last_name : str, password : str):
+        pass
+    
+    @abstractmethod
+    def check_table_number(self, table_number : int):
+        pass
+    
+    @abstractmethod
+    def add_admin(self, table_number : int, name : str, last_name : str, password : str):
+        pass
+    
+    @abstractmethod
+    def check_password_admin(self, password : str):
+        pass

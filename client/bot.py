@@ -10,6 +10,8 @@ import os
 from states.about_state import AboutState
 from states.first_login import FirstLogin
 from states.help_state import HelpState
+from status.status import Status
+from status.text_getter import TextGetter
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from observer import Observer
@@ -30,23 +32,15 @@ class Bot(Observer):
         
         self.bot.callback_query_handler(func=self.callback_query_filter)(self.handle_button_query)
         
-    def update(self, entry_id):
+    def update(self, entry_id:int):
         chat_id = ServiceCollection.Repository.get_chat_id_by_entry_id(entry_id)
         status:str= ServiceCollection.Repository.get_status_by_entry_id(entry_id)
-        text = None
+
+        text = TextGetter.get_text(chat_id, entry_id, status)
         
-        if status == "AtTheReception":
+        if status == Status.AtTheReception:
             self.bot.edit_message_reply_markup(chat_id, self.last_bot_message[chat_id], reply_markup=None)
-            admin:Admin = ServiceCollection.Repository.get_admin(entry_id)
-            
-            text = f"Подойдите к столику №{admin.table_number}.\nВас будет обслуживать: {admin.first_name} {admin.last_name}."
         
-        if status == "Cancel":
-            text = "Вашу запись отменили."
-        
-        if status == "Accept":
-            text = "Ваш прием окончен."
-            
         if text is not None:
             message = self.bot.send_message(chat_id, text)    
             self.last_bot_message[chat_id] = message.message_id
@@ -66,7 +60,7 @@ class Bot(Observer):
         response = manager.handle_message(call)
         
         self.last_user_message[call.message.chat.id] = call.message.message_id
-        # self.bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+        
         self.bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         self.send_message(call.message.chat.id, response.message, response.markup)
 
