@@ -19,7 +19,7 @@ logging.basicConfig(
 
 ServiceCollection.LoggerService = logging.getLogger()
 
-app_type = "development"
+app_type = "production"
 
 psql_settings = psql_loader.load_psql_settings(app_type)
 
@@ -32,8 +32,7 @@ ServiceCollection.Repository.attach(bot)
 
 def listen_for_notifications():
     logging.info("Listening for notifications")
-    listen(ServiceCollection.Repository)
-
+    ServiceCollection.Repository.listen()
 
 try:
     listener_thread = threading.Thread(target=listen_for_notifications)

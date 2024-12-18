@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__f
 
 from psql_repository import PsqlRepository
 
-app_type = "development" # development or production
+app_type = "production" # development or production
 
 psql_settings = {}    
 

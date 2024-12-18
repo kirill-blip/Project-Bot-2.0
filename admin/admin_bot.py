@@ -218,7 +218,7 @@ class AdminBot:
         if self.no_admin in [0, 1]:
             return
         
-        exists = ServiceCollection.Repository.check_client()
+        exists = ServiceCollection.Repository.is_client_waiting()
         
         if self.admin_manager.is_busy(message.chat.id):
             self.bot.delete_message(message.chat.id, message.message_id)
@@ -261,11 +261,11 @@ class AdminBot:
 
     def handle_no_action(self, admin_chat_id:int, id):
         self.admin_manager.set_is_busy_admin(admin_chat_id, False)
-        ServiceCollection.Repository.dont_come_client(id)
+        ServiceCollection.Repository.cancel_entry(id)
 
     def handle_yes_action(self, admin_chat_id:int, id):
         self.admin_manager.set_is_busy_admin(admin_chat_id, False)
-        ServiceCollection.Repository.come_client(id)
+        ServiceCollection.Repository.accept_entry(id)
 
     def warn_user_to_press_button(self, message):
         self.bot.send_message(
