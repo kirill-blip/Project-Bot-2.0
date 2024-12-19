@@ -1,4 +1,4 @@
 class Status:
-            AtTheReception = "AtTheReception"
-            Cancel = "Canceled"
-            Accept = "Accept"
+    AtTheReception = "AtTheReception"
+    Cancel = "Cancel"
+    Accept = "Accept"

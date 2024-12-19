@@ -6,6 +6,8 @@ from repository import Repository
 import sys
 import os
 
+from service_collection import ServiceCollection
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from client.entry import Entry
@@ -507,6 +509,9 @@ class PsqlRepository(Repository, Subject):
         self.connection.close()
 
     def listen(self):
+        # Этот метод нужен для того, чтобы слушать уведомления от базы данных 
+        # и уведомлять об этом наблюдателей
+        
         connection = psycopg2.connect(
             dbname=self.dbname,
             user=self.user,
@@ -519,12 +524,20 @@ class PsqlRepository(Repository, Subject):
         cursor = connection.cursor()
         cursor.execute("LISTEN value_change;")
 
-        while True:
-            if select.select([cursor.connection], [], [], 5) == ([], [], []):
-                pass
-            else:
-                connection.poll()
-                while connection.notifies:
-                    notify = connection.notifies.pop(0)
-                    print("Got NOTIFY:", notify.pid, notify.channel, notify.payload)
-                    repository.notify(notify.payload)
+        try:
+            while True:
+                if select.select([cursor.connection], [], [], 5) == ([], [], []):
+                    pass
+                else:
+                    connection.poll()
+                    while connection.notifies:
+                        notify = connection.notifies.pop(0)
+                        print("Got NOTIFY:", notify.pid, notify.channel, notify.payload)
+                        ServiceCollection.LoggerService.info(f"Got NOTIFY: {notify.pid}, {notify.channel}, {notify.payload}")
+                        self.notify(notify.payload)
+        except Exception as e:
+            ServiceCollection.LoggerService.error(e)
+            print("In listen method:", e)
+        finally:
+            cursor.close()
+            connection.close()

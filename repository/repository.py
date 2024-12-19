@@ -1,7 +1,12 @@
 from abc import ABC, abstractmethod
 
-from entry import Entry
-from user import User
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from client.entry import Entry
+from client.user import User
 
 class Repository(ABC):
     @abstractmethod

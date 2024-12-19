@@ -7,6 +7,7 @@ import repository
 import form_repository
 
 class ServiceCollection():
+    # Класс для хранения сервисов
     Repository  : repository.Repository= None 
     FormRepository : form_repository.FormRepository = None
     LoggerService : Logger = None

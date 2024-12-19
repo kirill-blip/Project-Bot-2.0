@@ -5,6 +5,9 @@ from user import User
 
 class TicketManager():
     def create(self, chat_id:int, use_old:bool = False):
+        # Создание талона
+        ServiceCollection.LoggerService.info(f"Creating ticket for {chat_id}")
+        
         entry:Entry = ServiceCollection.FormRepository.get_form_entry(chat_id)
         entry.chat_id = chat_id
         
@@ -33,17 +36,10 @@ class TicketManager():
             user.last_name = entry.last_name
             user.phone = entry.phone
             
-            print("User:", entry.first_name)
-            print("User:", entry.last_name)
-            print("User:", entry.phone)
-            
             if ServiceCollection.Repository.has_user(chat_id):
                 ServiceCollection.Repository.update_user(user)
             else:
                 ServiceCollection.Repository.add_user(user)
-                
-            print("Ticket Number:", entry.ticket_number)
-            print("Date:", entry.date)    
             
             ServiceCollection.Repository.add_entry(entry)
             

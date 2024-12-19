@@ -7,8 +7,8 @@ from telebot import types
 class EntryState(State):
     def get_message(self):
         ticket_number = ServiceCollection.Repository.get_ticket_number_by_chat_id(self.manager.chat_id)
-        
-        return f"* Талон №{ticket_number:03d} *\nВам придет уведомление, когда ваша очередь подойдет."
+        print("Ticket number from method: ", ticket_number)
+        return f"<b>Талон №{ticket_number:03d}</b>\nВам придет уведомление, когда ваша очередь подойдет."
     
     def handle_message(self, message):
         if message.data == "cancel":

@@ -5,6 +5,7 @@ from states.phone_state import PhoneState
 from states.start_state import StartState
 import response
 
+# Это класс, который обрабатывает переходы состояний и обработку сообщений для чат-бота.
 class Manager():
     states = {}
     

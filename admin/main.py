@@ -1,4 +1,5 @@
 import json
+import logging
 import sys
 import os
 from admin_bot import AdminBot
@@ -8,10 +9,19 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__f
 
 from psql_repository import PsqlRepository
 
+logging.basicConfig(
+    filename='admin.log',
+    filemode='a',
+    level=logging.DEBUG
+)
+
+ServiceCollection.LoggerService = logging.getLogger()
+
 app_type = "production" # development or production
 
 psql_settings = {}    
 
+# Загрузка настроек для подключения к БД
 if app_type == "development":
     data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
     json_file_path = os.path.join(data_dir, 'psql_settings_develop.json')
@@ -29,11 +39,13 @@ elif app_type == "production":
 
 print(psql_settings)
 
+
+# Ининциализация репозиториев
 ServiceCollection.Repository = PsqlRepository(psql_settings["dbname"], psql_settings["user"], psql_settings["password"], psql_settings["host"], psql_settings["port"])
 
-bot = AdminBot("8177585416:AAGoas6yHV8dGmH5bTxFHu3Tpcnxqe9GwPw")
-
 try:
-    pass
+    # Запуск бота
+    ServiceCollection.LoggerService.info("Starting bot")
+    bot = AdminBot("8177585416:AAGoas6yHV8dGmH5bTxFHu3Tpcnxqe9GwPw")
 except Exception as e:
     print(e)

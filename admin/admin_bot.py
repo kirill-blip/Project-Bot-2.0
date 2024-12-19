@@ -11,6 +11,8 @@ from telebot.types import (
 
 class AdminBot:
     def __init__(self, token: str):
+        ServiceCollection.LoggerService.info("Starting bot")
+        # Инициализация бота
         self.bot = telebot.TeleBot(token)
         self.attempts = {}
         self.information = []
@@ -38,6 +40,7 @@ class AdminBot:
         self.bot.polling(none_stop=True)
 
     def handle_inline_button_action(self, call):
+        # Обработка нажатий на кнопки
         if call.data == "no":
             self.handle_no_action(call.message.chat.id, self.info_user)
         elif call.data == "yes":
@@ -50,6 +53,7 @@ class AdminBot:
         self.waiting_for_button = False
 
     def handle_start_command(self, message):
+        # Обработка команды /start
         user_id = message.chat.id
 
         user_exists = ServiceCollection.Repository.check_user_admin(user_id)
@@ -68,6 +72,7 @@ class AdminBot:
         )
         
     def handle_reset_command(self, message):
+        # Обработка команды /reset_attempts
         user_id = message.chat.id
         user_exists = ServiceCollection.Repository.check_user_admin(user_id)
         
@@ -82,6 +87,7 @@ class AdminBot:
             )
 
     def handle_password_input(self, message):
+        # Обработка ввода пароля
         user_id = message.chat.id
 
         if user_id not in self.attempts:
@@ -126,6 +132,7 @@ class AdminBot:
                 return False
 
     def send_button(self, user_id):
+        # Если пользователь является администратором, то отправляется кнопки
         if self.no_admin != 2:
             markup = ReplyKeyboardMarkup(resize_keyboard=True)
             button = KeyboardButton("Вызвать клиента")
@@ -140,6 +147,7 @@ class AdminBot:
             )
 
     def handle_button_press(self, message):
+        # Обработка нажатий на кнопки
         if ServiceCollection.Repository.check_user_admin(message.chat.id) == False:
             self.bot.send_message(message.chat.id, "Вы не являетесь больше администратором.")
             return
@@ -160,6 +168,7 @@ class AdminBot:
         print(message.text)
 
     def add_admin(self, message):
+        # Добавление администратора
         if self.no_admin in [0, 1]:
             return
         
@@ -191,6 +200,7 @@ class AdminBot:
             return
 
     def update_table_info(self, message):
+        # Обновление информации о столе
         if self.no_admin in [0, 1]:
             return
         
@@ -215,17 +225,22 @@ class AdminBot:
         self.bot.send_message(chat_id=message.chat.id, text="Информация о столе *успешно* обновлена.", parse_mode="Markdown")
 
     def call_client(self, message):
+        ServiceCollection.LoggerService.info("Calling client")
+        
+        # Вызов клиента
         if self.no_admin in [0, 1]:
             return
         
         exists = ServiceCollection.Repository.is_client_waiting()
         
         if self.admin_manager.is_busy(message.chat.id):
+            # Если администратор занят, то отправляется сообщение
             self.bot.delete_message(message.chat.id, message.message_id)
             self.warn_user_to_press_button(message)
             return
         
         if exists != 0:
+            # Если клиент ожидает, то отправляется сообщение
             self.admin_manager.set_is_busy_admin(message.chat.id, True)
             
             client = ServiceCollection.Repository.call_client()
@@ -244,6 +259,7 @@ class AdminBot:
             self.bot.send_message(message.chat.id, "На сегодня записей больше нет.")
 
     def process_message(self, message):
+        # Обработка сообщения
         table_info = ServiceCollection.Repository.get_table_number(message.chat.id)
         
         self.bot.send_message(
@@ -251,6 +267,7 @@ class AdminBot:
         )
 
     def send_inline_button(self):
+        ServiceCollection.LoggerService.info("Sending inline button")
         markup = InlineKeyboardMarkup()
 
         button1 = InlineKeyboardButton(text="Не пришел", callback_data="no")

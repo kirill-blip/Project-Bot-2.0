@@ -1,3 +1,4 @@
+from logging import Logger
 import os
 import sys
 
@@ -7,3 +8,4 @@ import repository
 
 class ServiceCollection():
     Repository  : repository.Repository= None 
+    LoggerService : Logger = None
