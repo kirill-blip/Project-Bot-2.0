@@ -9,6 +9,9 @@ from helpers import psql_loader
 from service_collection import ServiceCollection
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'repository'))
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data'))
+
+from token_loader import ParseToken, TryParseToken
 from psql_repository import PsqlRepository
 
 # Настройка логгера
@@ -20,7 +23,7 @@ logging.basicConfig(
 
 ServiceCollection.LoggerService = logging.getLogger()
 
-app_type = "production" # development or production
+app_type = "development" # development or production
 
 psql_settings = psql_loader.load_psql_settings(app_type)
 
@@ -28,7 +31,14 @@ psql_settings = psql_loader.load_psql_settings(app_type)
 ServiceCollection.Repository = PsqlRepository(psql_settings["dbname"], psql_settings["user"], psql_settings["password"], psql_settings["host"], psql_settings["port"])
 ServiceCollection.FormRepository = InMemoryFormRepository()
 
-bot = Bot("")
+if TryParseToken() == True:
+    token = ParseToken("client")
+    ServiceCollection.LoggerService.info("Token found")
+else:
+    print('Token not found')
+    exit()
+
+bot = Bot(token)
 
 ServiceCollection.Repository.attach(bot)
 

@@ -1,6 +1,7 @@
 {
     "python.analysis.extraPaths": [
         "./repository",
-        "./client"
+        "./client",
+        "./data"
     ]
 }
