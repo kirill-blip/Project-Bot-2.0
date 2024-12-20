@@ -104,6 +104,17 @@ class PsqlRepository(Repository, Subject):
 
         return admin
 
+    def get_admin_id_by_chat_id(self, chat_id:int):
+        self.get_cursor().execute('''
+                                SELECT id
+                                FROM admin
+                                WHERE chat_id = %s
+                                  ''', (chat_id,))
+        
+        result = self.get_cursor().fetchone()
+        return result[0]
+        
+
     def get_chat_id_by_entry_id(self, entry_id:int):
         self.get_cursor().execute(
             """
@@ -524,20 +535,20 @@ class PsqlRepository(Repository, Subject):
         cursor = connection.cursor()
         cursor.execute("LISTEN value_change;")
 
-        try:
-            while True:
-                if select.select([cursor.connection], [], [], 5) == ([], [], []):
-                    pass
-                else:
-                    connection.poll()
-                    while connection.notifies:
-                        notify = connection.notifies.pop(0)
-                        print("Got NOTIFY:", notify.pid, notify.channel, notify.payload)
-                        ServiceCollection.LoggerService.info(f"Got NOTIFY: {notify.pid}, {notify.channel}, {notify.payload}")
-                        self.notify(notify.payload)
-        except Exception as e:
-            ServiceCollection.LoggerService.error(e)
-            print("In listen method:", e)
-        finally:
-            cursor.close()
-            connection.close()
+        # try:
+        while True:
+            if select.select([cursor.connection], [], [], 5) == ([], [], []):
+                pass
+            else:
+                connection.poll()
+                while connection.notifies:
+                    notify = connection.notifies.pop(0)
+                    print("Got NOTIFY:", notify.pid, notify.channel, notify.payload)
+                    ServiceCollection.LoggerService.info(f"Got NOTIFY: {notify.pid}, {notify.channel}, {notify.payload}")
+                    self.notify(notify.payload)
+        # except Exception as e:
+        #     ServiceCollection.LoggerService.error(e)
+        #     print("In listen method:", e)
+        # finally:
+        #     cursor.close()
+        #     connection.close()

@@ -102,6 +102,10 @@ class Repository(ABC):
         pass
 
     @abstractmethod
+    def get_admin_id_by_chat_id(self, chat_id:int):
+        pass
+
+    @abstractmethod
     def update_client(self, admin_id: int, ticket_id: int):
         pass
 

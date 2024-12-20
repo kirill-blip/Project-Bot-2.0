@@ -111,7 +111,7 @@ class AdminBot:
                 self.information.append(result[0][1])
                 
                 self.bot.send_message(
-                    user_id, f"Пароль верный! Добро пожаловать {result[0][0]}."
+                    user_id, f"Пароль верный! Добро пожаловать, {result[0][0]}."
                 )
                 
                 self.send_button(user_id)
@@ -124,7 +124,7 @@ class AdminBot:
             if self.attempts[user_id] > 0:
                 self.bot.send_message(
                     user_id,
-                    f"Неверный пароль. Осталось попыток: {self.attempts[user_id]}.",
+                    f"❌ Неверный пароль. Осталось попыток: {self.attempts[user_id]}.",
                 )
             else:
                 self.bot.send_message(user_id, "Вы исчерпали количество попыток.")
@@ -185,18 +185,18 @@ class AdminBot:
             print(ServiceCollection.Repository.check_table_number(table_number))
             
             if ServiceCollection.Repository.check_table_number(table_number):
-                self.bot.send_message(chat_id=message.chat.id, text="Стол с таким номером уже существует.")
+                self.bot.send_message(chat_id=message.chat.id, text="❌ Стол с таким номером уже существует.")
                 return
             
             if ServiceCollection.Repository.check_password_admin(password):
-                self.bot.send_message(chat_id=message.chat.id, text="Пароль уже занят.")
+                self.bot.send_message(chat_id=message.chat.id, text="❌ Пароль уже занят.")
                 return
             
             ServiceCollection.Repository.add_admin(table_number, name, last_name, password)
             
-            self.bot.send_message(chat_id=message.chat.id, text="Администратор *успешно* добавлен.", parse_mode="Markdown")
+            self.bot.send_message(chat_id=message.chat.id, text="✅ Администратор *успешно* добавлен.", parse_mode="Markdown")
         except:
-            self.bot.send_message(chat_id=message.chat.id, text="Введите все данные.")
+            self.bot.send_message(chat_id=message.chat.id, text="❌ Введите все данные.")
             return
 
     def update_table_info(self, message):
@@ -215,14 +215,14 @@ class AdminBot:
             password = text[4]
             
             if ServiceCollection.Repository.check_password_admin(password):
-                self.bot.send_message(chat_id=message.chat.id, text="Пароль уже занят.")
+                self.bot.send_message(chat_id=message.chat.id, text="❌ Пароль уже занят.")
                 return
         except:
             pass
         
         ServiceCollection.Repository.update_table_info(table_number, name, surname, password)
         
-        self.bot.send_message(chat_id=message.chat.id, text="Информация о столе *успешно* обновлена.", parse_mode="Markdown")
+        self.bot.send_message(chat_id=message.chat.id, text="✅ Информация о столе *успешно* обновлена.", parse_mode="Markdown")
 
     def call_client(self, message):
         ServiceCollection.LoggerService.info("Calling client")
@@ -244,15 +244,15 @@ class AdminBot:
             self.admin_manager.set_is_busy_admin(message.chat.id, True)
             
             client = ServiceCollection.Repository.call_client()
-            table_number = ServiceCollection.Repository.get_table_number(message.chat.id)
-            
-            ServiceCollection.Repository.update_client(table_number, client[0])
+            admin_id = ServiceCollection.Repository.get_admin_id_by_chat_id(message.chat.id)
+            print(admin_id)
+            ServiceCollection.Repository.update_client(admin_id, client[0])
             
             self.info_user = client[0]
             
             self.bot.send_message(
                 message.chat.id,
-                f"*Талона {client[0]}*\nАбитуриент: {client[1]}\nНомер телефона: {client[2]}",
+                f"*Талона №{client[0]:03d}*\nАбитуриент: {client[1]}\nНомер телефона: {client[2]}",
                 reply_markup=self.send_inline_button(), parse_mode="Markdown",
             )
         else:
