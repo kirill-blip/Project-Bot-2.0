@@ -3,6 +3,7 @@ import logging
 import sys
 import os
 from admin_bot import AdminBot
+from helpers import psql_loader
 from service_collection import ServiceCollection
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'repository'))
@@ -19,23 +20,8 @@ ServiceCollection.LoggerService = logging.getLogger()
 
 app_type = "production" # development or production
 
-psql_settings = {}    
-
 # Загрузка настроек для подключения к БД
-if app_type == "development":
-    data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
-    json_file_path = os.path.join(data_dir, 'psql_settings_develop.json')
-
-    with open(json_file_path, 'r') as file:
-        data = json.load(file)
-        psql_settings.update(data)
-elif app_type == "production":
-    data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
-    json_file_path =os.path.join(data_dir, 'psql_settings.json')
-
-    with open(json_file_path, 'r') as file:
-        data = json.load(file)
-        psql_settings.update(data)
+psql_settings = psql_loader.load_psql_settings(app_type)
 
 print(psql_settings)
 
@@ -48,4 +34,5 @@ try:
     ServiceCollection.LoggerService.info("Starting bot")
     bot = AdminBot("8177585416:AAGoas6yHV8dGmH5bTxFHu3Tpcnxqe9GwPw")
 except Exception as e:
+    ServiceCollection.LoggerService.error(e)
     print(e)

@@ -40,7 +40,11 @@ class Bot(Observer):
         text = TextGetter.get_text(chat_id, entry_id, status)
         
         if status == Status.AtTheReception:
-            self.bot.edit_message_reply_markup(chat_id, self.last_bot_message[chat_id], reply_markup=None)
+            try:
+                self.bot.edit_message_reply_markup(chat_id, self.last_bot_message[chat_id], reply_markup=None)
+            except telebot.apihelper.ApiException as e:
+                ServiceCollection.LoggerService.error(f"Failed to edit message reply markup: {e}")
+                print(f"Failed to edit message reply markup: {e}")
         
         if text is not None:
             message = self.bot.send_message(chat_id, text, parse_mode="Markdown")
