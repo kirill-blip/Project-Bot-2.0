@@ -6,6 +6,7 @@ psql_settings.json
 
 /client/__pycache__
 /admin/__pycache__
+/data/tokens.json
 
 # C extensions
 *.so

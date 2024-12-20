@@ -28,7 +28,7 @@ psql_settings = psql_loader.load_psql_settings(app_type)
 ServiceCollection.Repository = PsqlRepository(psql_settings["dbname"], psql_settings["user"], psql_settings["password"], psql_settings["host"], psql_settings["port"])
 ServiceCollection.FormRepository = InMemoryFormRepository()
 
-bot = Bot("7831619955:AAGDhO6ig-VoJDsTEKEjb0MbcgNEUaDCSho")
+bot = Bot("")
 
 ServiceCollection.Repository.attach(bot)
 

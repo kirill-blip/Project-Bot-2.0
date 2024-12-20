@@ -32,7 +32,7 @@ ServiceCollection.Repository = PsqlRepository(psql_settings["dbname"], psql_sett
 try:
     # Запуск бота
     ServiceCollection.LoggerService.info("Starting bot")
-    bot = AdminBot("8177585416:AAGoas6yHV8dGmH5bTxFHu3Tpcnxqe9GwPw")
+    bot = AdminBot()
 except Exception as e:
     ServiceCollection.LoggerService.error(e)
     print(e)
