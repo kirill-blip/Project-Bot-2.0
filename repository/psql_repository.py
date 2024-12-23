@@ -370,7 +370,7 @@ class PsqlRepository(Repository, Subject):
                 phone
             FROM entry
             JOIN "user" ON user_id = "user".id
-            WHERE status = 'Waiting'
+            WHERE status = 'Waiting' AND "entry".date::DATE = CURRENT_DATE
             ORDER BY entry.id
             LIMIT 1;
         """)
@@ -385,7 +385,7 @@ class PsqlRepository(Repository, Subject):
             update entry
             set status = 'AtTheReception',
                 admin_id = {admin_id}
-            where ticket_number = {ticket_id}
+            where ticket_number = {ticket_id} and "entry".date::DATE = CURRENT_DATE
         """)
         
         self.connection.commit()
@@ -412,7 +412,7 @@ class PsqlRepository(Repository, Subject):
             f"""
             update entry
             set status = 'Cancel'
-            where ticket_number = {ticket_number}
+            where ticket_number = {ticket_number} and "entry".date::DATE = CURRENT_DATE
         """
         )
         
@@ -423,7 +423,7 @@ class PsqlRepository(Repository, Subject):
             f"""
             update entry
             set status = 'Accept'
-            where ticket_number = {ticket_number}
+            where ticket_number = {ticket_number} and "entry".date:DATE = CURRENT_DATE
         """
         )
         

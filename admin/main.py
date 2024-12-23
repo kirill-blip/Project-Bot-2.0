@@ -20,7 +20,7 @@ logging.basicConfig(
 
 ServiceCollection.LoggerService = logging.getLogger()
 
-app_type = "development" # development or production
+app_type = "production" # development or production
 
 if TryParseToken() == True:
     token = ParseToken("admin")
