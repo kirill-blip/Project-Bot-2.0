@@ -20,7 +20,7 @@ logging.basicConfig(
 
 ServiceCollection.LoggerService = logging.getLogger()
 
-app_type = "production" # development or production
+app_type = "development" # development or production
 
 if TryParseToken() == True:
     token = ParseToken("admin")
@@ -37,10 +37,10 @@ print(psql_settings)
 # Ининциализация репозиториев
 ServiceCollection.Repository = PsqlRepository(psql_settings["dbname"], psql_settings["user"], psql_settings["password"], psql_settings["host"], psql_settings["port"])
 
-try:
+# try:
     # Запуск бота
-    ServiceCollection.LoggerService.info("Starting bot")
-    bot = AdminBot(token)
-except Exception as e:
-    ServiceCollection.LoggerService.error(e)
-    print(e)
+ServiceCollection.LoggerService.info("Starting bot")
+bot = AdminBot(token)
+# except Exception as e:
+#     ServiceCollection.LoggerService.error(e)
+#     print(e)

@@ -150,6 +150,10 @@ class Repository(ABC):
     @abstractmethod
     def check_password_admin(self, password: str):
         pass
+    
+    @abstractmethod
+    def remove_admin(self, chat_id: int):
+        pass
 
     @abstractmethod
     def listen(self):

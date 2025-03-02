@@ -23,11 +23,9 @@ class AdminBot:
         self.admin_manager = AdminManager()
 
         self.bot.message_handler(commands=["start"])(self.handle_start_command)
+        self.bot.message_handler(func=self.handle_button_press)(self.call_client)
         self.bot.message_handler(commands=["reset_attempts"])(self.handle_reset_command)
         self.bot.message_handler(func=self.handle_password_input)(self.process_message)
-        self.bot.message_handler(func=self.handle_button_press)(
-            self.call_client
-        )
 
         self.bot.message_handler(func=lambda message: self.waiting_for_button)(
             self.warn_user_to_press_button
@@ -74,16 +72,18 @@ class AdminBot:
     def handle_reset_command(self, message):
         # Обработка команды /reset_attempts
         user_id = message.chat.id
+        ServiceCollection.Repository.remove_admin(user_id)
         user_exists = ServiceCollection.Repository.check_user_admin(user_id)
         
         if user_exists:
             self.attempts[user_id] = 3
+            
             self.bot.send_message(
-                message.chat.id, "Количество попыток сброшено до 3."
+                user_id, "Количество попыток сброшено до 3."
             )
         else:
             self.bot.send_message(
-                message.chat.id, "Вы не являетесь администратором."
+                user_id, "Вы не являетесь администратором."
             )
 
     def handle_password_input(self, message):
@@ -109,6 +109,8 @@ class AdminBot:
                 ServiceCollection.Repository.update_status_admin(user_id, result[0][1])
                 
                 self.information.append(result[0][1])
+                
+                print(result[0][1])
                 
                 self.bot.send_message(
                     user_id, f"Пароль верный! Добро пожаловать, {result[0][0]}."
@@ -150,6 +152,17 @@ class AdminBot:
         # Обработка нажатий на кнопки
         if ServiceCollection.Repository.check_user_admin(message.chat.id) == False:
             self.bot.send_message(message.chat.id, "Вы не являетесь больше администратором.")
+            return
+        
+        commands = [
+            "Вызвать клиента",
+            "Обновить информацию о столе",
+            "Добавить администратора",
+        ]
+        
+        if message.chat.id in self.attempts and message.text in commands:
+            self.bot.send_message(message.chat.id, "Введите пароль для входа.")
+            self.attempts[message.chat.id] += 1
             return
         
         if message.text == "Вызвать клиента":

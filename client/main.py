@@ -23,7 +23,7 @@ logging.basicConfig(
 
 ServiceCollection.LoggerService = logging.getLogger()
 
-app_type = "production" # development or production
+app_type = "development" # development or production
 
 psql_settings = psql_loader.load_psql_settings(app_type)
 

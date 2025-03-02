@@ -423,7 +423,7 @@ class PsqlRepository(Repository, Subject):
             f"""
             update entry
             set status = 'Accept'
-            where ticket_number = {ticket_number} and "entry".date:DATE = CURRENT_DATE
+            where ticket_number = {ticket_number} and "entry".date::DATE = CURRENT_DATE
         """
         )
         
@@ -512,6 +512,16 @@ class PsqlRepository(Repository, Subject):
         result = self.get_cursor().fetchone()
         
         return result[0]
+    
+    def remove_admin(self, chat_id):
+        self.get_cursor().execute(f'''
+                                UPDATE admin
+                                SET chat_id = 0,
+                                    status = FALSE
+                                WHERE chat_id = {chat_id}
+                                  ''')
+        
+        self.connection.commit()
     
     def dispose(self):
         self.get_cursor().close()
