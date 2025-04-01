@@ -171,7 +171,7 @@ class PsqlRepository(Repository, Subject):
             SELECT ticket_number 
             FROM entry 
             WHERE user_id = (SELECT id FROM "user" WHERE chat_id = %s)
-                AND status IN ('Waiting', 'AtTheReception');
+                AND status IN ('Waiting', 'Processing');
             """,
             (chat_id,),
         )
@@ -383,7 +383,7 @@ class PsqlRepository(Repository, Subject):
         self.get_cursor().execute(
             f"""
             update entry
-            set status = 'AtTheReception',
+            set status = 'Processing',
                 admin_id = {admin_id}
             where ticket_number = {ticket_id} and "entry".date::DATE = CURRENT_DATE
         """)
@@ -411,7 +411,7 @@ class PsqlRepository(Repository, Subject):
         self.get_cursor().execute(
             f"""
             update entry
-            set status = 'Cancel'
+            set status = 'Canceled'
             where ticket_number = {ticket_number} and "entry".date::DATE = CURRENT_DATE
         """
         )
@@ -422,7 +422,7 @@ class PsqlRepository(Repository, Subject):
         self.get_cursor().execute(
             f"""
             update entry
-            set status = 'Accept'
+            set status = 'Accepted'
             where ticket_number = {ticket_number} and "entry".date::DATE = CURRENT_DATE
         """
         )
@@ -545,20 +545,20 @@ class PsqlRepository(Repository, Subject):
         cursor = connection.cursor()
         cursor.execute("LISTEN value_change;")
 
-        # try:
-        while True:
-            if select.select([cursor.connection], [], [], 5) == ([], [], []):
-                pass
-            else:
-                connection.poll()
-                while connection.notifies:
-                    notify = connection.notifies.pop(0)
-                    print("Got NOTIFY:", notify.pid, notify.channel, notify.payload)
-                    ServiceCollection.LoggerService.info(f"Got NOTIFY: {notify.pid}, {notify.channel}, {notify.payload}")
-                    self.notify(notify.payload)
-        # except Exception as e:
-        #     ServiceCollection.LoggerService.error(e)
-        #     print("In listen method:", e)
-        # finally:
-        #     cursor.close()
-        #     connection.close()
+        try:
+            while True:
+                if select.select([cursor.connection], [], [], 5) == ([], [], []):
+                    pass
+                else:
+                    connection.poll()
+                    while connection.notifies:
+                        notify = connection.notifies.pop(0)
+                        print("Got NOTIFY:", notify.pid, notify.channel, notify.payload)
+                        ServiceCollection.LoggerService.info(f"Got NOTIFY: {notify.pid}, {notify.channel}, {notify.payload}")
+                        self.notify(notify.payload)
+        except Exception as e:
+            ServiceCollection.LoggerService.error(e)
+            print("In listen method:", e)
+        finally:
+            cursor.close()
+            connection.close()

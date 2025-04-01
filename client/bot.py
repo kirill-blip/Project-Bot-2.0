@@ -37,13 +37,9 @@ class Bot(Observer):
         chat_id = ServiceCollection.Repository.get_chat_id_by_entry_id(entry_id)
         status:str= ServiceCollection.Repository.get_status_by_entry_id(entry_id)
 
-        print("Entry id: ", entry_id)
-        print("Chat id: ", chat_id)
-        print("Status: ", status)
-
         text = TextGetter.get_text(chat_id, entry_id, status)
         
-        if status == Status.AtTheReception:
+        if status == Status.Processing:
             try:
                 self.bot.edit_message_reply_markup(chat_id, self.last_bot_message[chat_id], reply_markup=None)
             except Exception as e:

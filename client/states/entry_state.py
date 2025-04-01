@@ -4,6 +4,8 @@ from states.state import State
 
 from telebot import types
 
+from status.status import Status
+
 class EntryState(State):
     def get_message(self):
         ticket_number = ServiceCollection.Repository.get_ticket_number_by_chat_id(self.manager.chat_id)
@@ -12,7 +14,7 @@ class EntryState(State):
     
     def handle_message(self, message):
         if message.data == "cancel":
-            ServiceCollection.Repository.update_status(self.manager.chat_id, 'CanceledByUser')
+            ServiceCollection.Repository.update_status(self.manager.chat_id, Status.CanceledByUser)
             return Response("Вы отменили запись", None)
     
     def get_markup(self):

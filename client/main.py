@@ -48,7 +48,6 @@ def listen_for_notifications():
 
 try:
     # Запуск бота и слушателя
-    
     listener_thread = threading.Thread(target=listen_for_notifications)
     listener_thread.start()
     bot.run()
